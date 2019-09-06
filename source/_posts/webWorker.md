@@ -1,7 +1,6 @@
 ---
 title: webWokrer
 ---
-
 ## 一、`webWokrer`介绍
 
 javascript 是一种单线程语言，即所有任务只能在一个线程上完成，一次只能完成一个任务，如果前面的任务没有完成，后面的任务将无法执行。到目前为止，计算机的运算能力已经得到了极大的提升，单线程无法充分利用起计算机的运算能力。
@@ -125,6 +124,7 @@ importScripts('foo.js', 'bar.js');      /* 引入两个脚本 */
 ```
 浏览器加载并运行每一个列出的脚本。每个脚本中的全局对象都能够被 worker 使用。如果脚本无法加载，将抛出 NETWORK_ERROR 异常，接下来的代码也无法执行。而之前执行的代码(包括使用 window.setTimeout() 异步执行的代码)依然能够运行。importScripts() 之后的函数声明依然会被保留，因为它们始终会在其他代码之前运行。
 ### 2.5 SharedWorker
+`SharedWorker`与普通的`worker`不一样，`SharedWorker`可以创建一个共享线程，使得多个页面可以共享一个worker线程。这里不做过多展开。
 
 ## 三、Worker的数据通信
 上面在2.1的时候说到，worker的数据传递分为两种形式，转让所有权和不转让所有权。
@@ -256,10 +256,61 @@ Worker3线程
 <body><div id="logDisplay"></div></body>
 </html>
 ```
+> 使用嵌入式worker，无法在worker中新建worker
 
-## 六、webpack中使用worker
+## 六、webpack中使用worker-loader
+根据**嵌入式web Worker**原理，我们就可以在`webpack`应用中直接使用`web Worker`。
 
+目前社区中已经有一个现成的轮子`worker-loader`可以直接使用了，下面就结合react 进行简单的说明。
 
+安装
+```
+npm i worker-loader --save
+```
+修改`webpack`配置
+```
+// 这里是使用了react-app-rewired
+module.exports = function override(config, env) {
+  config.module.rules.push({
+      test: /\.worker\.js$/,   // 这个配置是匹配worker.js 结尾的文件
+      use: { loader: 'worker-loader' ,
+        options: { inline: true }
+      }
+    })
+    config.output.globalObject = 'this'
+  return config;
+}
+```
+使用
+```
+import myWorker from './worker/file.worker.js';
+...
 
+const worker = new myWorker();
+worker.postMessage('init');
+worker.onmessage = function (event) {};
+worker.addEventListener('message', event => {
+  console.log(event.data)
+});
 
+...
+
+```
+[worker-loader说明](https://www.npmjs.com/package/worker-loader)
+
+## 七、worker的使用场景
+简单说明一下worker的一些使用场景
+1. 复杂的数学运算
+
+比如斐波那契数列计算，可以通过worker将复杂的计算分发到多个线程中，避免阻塞主线程。
+
+2. 图像处理
+
+通过使用从`<canvas>`或者`<video>`元素中获取的数据，可以把图像分割成个不同的区域并且把它们推送给并行的不同 Workers 来做计算
+
+3. 大量数据的检索
+
+当需要在调用 ajax后处理大量的数据，如果处理这些数据所需的时间长短非常重要，可以在 Web Worker 中来做这些，避免冻结 UI 线程。
+
+> 后续我们将会有专门的一期`d3.js`与`worker`的结合使用的分享
 
