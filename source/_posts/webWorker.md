@@ -116,6 +116,9 @@ worker.addEventListener('error', function (event) {
 `message`：读性良好的错误消息。
 
 ### 2.4 subWorker
+如果需要的话 worker能够生成更多的worker。这就是所谓的subworker，subWorker同样需要满足同源策略。而且，subworker解析URI时会相对于父worker的地址而不是自身页面的地址。这使得 worker 更容易记录它们之间的依赖关系。
+
+### 2.5 引入脚本与库
 Worker 线程能够访问一个全局函数importScripts()来引入脚本，该函数接受0个或者多个URI作为参数来引入资源；以下例子都是合法的：
 ```
 importScripts();                        /* 什么都不引入 */
@@ -123,7 +126,7 @@ importScripts('foo.js');                /* 只引入 "foo.js" */
 importScripts('foo.js', 'bar.js');      /* 引入两个脚本 */
 ```
 浏览器加载并运行每一个列出的脚本。每个脚本中的全局对象都能够被 worker 使用。如果脚本无法加载，将抛出 NETWORK_ERROR 异常，接下来的代码也无法执行。而之前执行的代码(包括使用 window.setTimeout() 异步执行的代码)依然能够运行。importScripts() 之后的函数声明依然会被保留，因为它们始终会在其他代码之前运行。
-### 2.5 SharedWorker
+### 2.6 SharedWorker
 `SharedWorker`与普通的`worker`不一样，`SharedWorker`可以创建一个共享线程，使得多个页面可以共享一个worker线程。这里不做过多展开。
 
 ## 三、Worker的数据通信
@@ -150,7 +153,7 @@ var data = {
 work.postMessage(data, [data.data.buffer]);
 ```
 
-ps:可转让对象支持的常用数据类型有`ArrayBuffer`和`ImageBitmap`
+> 可转让对象支持的常用数据类型有`ArrayBuffer`和`ImageBitmap`
 
 ## 四、Worker的线程问题
 `Javascript`引擎是单线程运行的，`Worker`能够让`Javscript`进行多线程进行运行，是否就代表着`Javascript`就变成的一个支持多线程的语言了呢？
@@ -283,7 +286,7 @@ module.exports = function override(config, env) {
 ```
 使用
 ```
-import myWorker from './worker/file.worker.js';
+import myWorker from './worker/file.worker.js' // 根据配置规则，webWorker文件得用 worker.js 结尾
 ...
 
 const worker = new myWorker();
@@ -314,3 +317,4 @@ worker.addEventListener('message', event => {
 
 > 后续我们将会有专门的一期`d3.js`与`worker`的结合使用的分享
 
+[demo地址](https://github.com/caikaihao/webWorkerDemo)
